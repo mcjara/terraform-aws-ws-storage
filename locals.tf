@@ -1,14 +1,10 @@
-resource "random_integer" "logs_s3" {
-  min = 1000
-  max = 9999
+resource "random_uuid" "logs_s3" {
 }
 
-resource "random_integer" "assets_s3" {
-  min = 1000
-  max = 9999
+resource "random_uuid" "assets_s3" {
 }
 
 locals {
-  logs_bucket_name   = lower("${var.instance_name}-logs-${random_integer.logs_s3.result}")
-  assets_bucket_name = lower("${var.instance_name}-assets-${random_integer.assets_s3.result}")
+  logs_bucket_name   = lower("${var.instance_name}-${random_uuid.logs_s3.result}")
+  assets_bucket_name = lower("${var.instance_name}-${random_uuid.assets_s3.result}")
 }
