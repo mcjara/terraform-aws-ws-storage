@@ -33,6 +33,7 @@ data "aws_elb_service_account" "root" {
 
 data "aws_iam_policy_document" "legacy_s3_policy" {
   count = local.modern_region ? 0 : 1
+
   statement {
     principals {
       type        = "AWS"
@@ -52,13 +53,11 @@ data "aws_iam_policy_document" "legacy_s3_policy" {
       identifiers = ["delivery.logs.amazonaws.com"]
     }
 
-    actions = ["s3:PutObject", "s3:GetBucketAcl"]
+    actions = ["s3:PutObject"]
     resources = [
       "${aws_s3_bucket.logs_bucket.arn}/alb/access/*",
-      "${aws_s3_bucket.logs_bucket.arn}/alb/connections/*",
-      "${aws_s3_bucket.logs_bucket.arn}"
+      "${aws_s3_bucket.logs_bucket.arn}/alb/connections/*"
     ]
-
     condition {
       test     = "StringEquals"
       variable = "s3:x-amz-acl"
@@ -68,11 +67,21 @@ data "aws_iam_policy_document" "legacy_s3_policy" {
 
   statement {
     principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+
+    actions = ["s3:GetBucketAcl"]
+    resources = ["${aws_s3_bucket.logs_bucket.arn}"]
+  }
+
+  statement {
+    principals {
       type        = "AWS"
       identifiers = ["*"]
     }
 
-    actions = ["s3:*"]
+    actions   = ["s3:*"]
     resources = [
       "${aws_s3_bucket.logs_bucket.arn}",
       "${aws_s3_bucket.logs_bucket.arn}/*"
