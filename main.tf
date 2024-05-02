@@ -88,12 +88,12 @@ data "aws_iam_policy_document" "legacy_s3_policy" {
     ]
 
     condition {
-      test     = "IpAddress"
+      test     = "NotIpAddress"
       variable = "aws:SourceIp"
       values   = var.source_ip_range
     }
 
-    effect = "Allow"
+    effect = "Deny"
   }
 }
 
