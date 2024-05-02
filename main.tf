@@ -31,7 +31,70 @@ data "aws_elb_service_account" "root" {
   count = local.modern_region ? 0 : 1
 }
 
-## Define Logs S3 Bucket Policy
+data "aws_iam_policy_document" "legacy_s3_policy" {
+  count = local.modern_region ? 0 : 1
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["${data.aws_elb_service_account.root[0].arn}"]
+    }
+
+    actions = ["s3:PutObject"]
+    resources = [
+      "${aws_s3_bucket.logs_bucket.arn}/alb/access/*",
+      "${aws_s3_bucket.logs_bucket.arn}/alb/connections/*"
+    ]
+  }
+
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject", "s3:GetBucketAcl"]
+    resources = [
+      "${aws_s3_bucket.logs_bucket.arn}/alb/access/*",
+      "${aws_s3_bucket.logs_bucket.arn}/alb/connections/*",
+      "${aws_s3_bucket.logs_bucket.arn}"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+    resources = [
+      "${aws_s3_bucket.logs_bucket.arn}",
+      "${aws_s3_bucket.logs_bucket.arn}/*"
+    ]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = var.source_ip_range
+    }
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
+  count  = local.modern_region ? 0 : 1
+  bucket = aws_s3_bucket.logs_bucket.id
+  policy = data.aws_iam_policy_document.legacy_s3_policy[0].json
+}
+
+/*
 
 resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
   count  = local.modern_region ? 0 : 1
@@ -95,6 +158,75 @@ resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
     POLICY
 }
 
+ */
+
+data "aws_iam_policy_document" "modern_s3_policy" {
+  count = local.modern_region ? 1 : 0
+
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["logdelivery.elasticloadbalancing.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject"]
+    resources = [
+      "arn:aws:s3:::${local.logs_bucket_name}/alb/access/AWSLogs/${local.aws_region}/*",
+      "arn:aws:s3:::${local.logs_bucket_name}/alb/connections/AWSLogs/${local.aws_region}/*"
+    ]
+  }
+
+  statement {
+    principals {
+      type        = "Service"
+      identifiers = ["delivery.logs.amazonaws.com"]
+    }
+
+    actions = ["s3:PutObject", "s3:GetBucketAcl"]
+    resources = [
+      "arn:aws:s3:::${local.logs_bucket_name}/alb/access/*",
+      "arn:aws:s3:::${local.logs_bucket_name}/alb/connections/*",
+      "arn:aws:s3:::${local.logs_bucket_name}"
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:x-amz-acl"
+      values   = ["bucket-owner-full-control"]
+    }
+  }
+
+  statement {
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    actions = ["s3:*"]
+    resources = [
+      "${aws_s3_bucket.logs_bucket.arn}",
+      "${aws_s3_bucket.logs_bucket.arn}/*"
+    ]
+
+    condition {
+      test     = "IpAddress"
+      variable = "aws:SourceIp"
+      values   = var.source_ip_range
+    }
+
+    effect = "Allow"
+  }
+}
+
+resource "aws_s3_bucket_policy" "logs_bucket-modern" {
+  count  = local.modern_region ? 1 : 0
+  bucket = aws_s3_bucket.logs_bucket.id
+  policy = data.aws_iam_policy_document.modern_s3_policy[0].json
+}
+
+/*
+
+
 resource "aws_s3_bucket_policy" "logs_bucket-modern" {
   count  = local.modern_region ? 1 : 0
   bucket = aws_s3_bucket.logs_bucket.id
@@ -156,3 +288,5 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
 }
     POLICY
 }
+
+ */
