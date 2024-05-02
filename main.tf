@@ -20,8 +20,12 @@ variable "modern_regions" {
 
 data "aws_region" "current" {}
 
+data "aws_caller_identity" "current" {
+}
+
 locals {
   aws_region    = data.aws_region.current.name
+  aws_account_id  = data.aws_caller_identity.current.account_id
   modern_region = contains(var.modern_regions, local.aws_region)
 }
 
@@ -30,6 +34,8 @@ locals {
 data "aws_elb_service_account" "root" {
   count = local.modern_region ? 0 : 1
 }
+
+/*
 
 data "aws_iam_policy_document" "legacy_s3_policy" {
   count = local.modern_region ? 0 : 1
@@ -103,7 +109,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
   policy = data.aws_iam_policy_document.legacy_s3_policy[0].json
 }
 
-/*
+*/
 
 resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
   count  = local.modern_region ? 0 : 1
@@ -167,7 +173,8 @@ resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
     POLICY
 }
 
- */
+
+/*
 
 data "aws_iam_policy_document" "modern_s3_policy" {
   count = local.modern_region ? 1 : 0
@@ -233,8 +240,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
   policy = data.aws_iam_policy_document.modern_s3_policy[0].json
 }
 
-/*
-
+*/
 
 resource "aws_s3_bucket_policy" "logs_bucket-modern" {
   count  = local.modern_region ? 1 : 0
@@ -249,7 +255,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
         "Service": "logdelivery.elasticloadbalancing.amazonaws.com"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${local.logs_bucket_name}/alb/access/AWSLogs/${local.aws_region}/*"
+      "Resource": "arn:aws:s3:::${local.logs_bucket_name}/alb/access/AWSLogs/${local.aws_account_id}/*"
     },
     {
       "Effect": "Allow",
@@ -257,7 +263,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
         "Service": "logdelivery.elasticloadbalancing.amazonaws.com"
       },
       "Action": "s3:PutObject",
-      "Resource": "arn:aws:s3:::${local.logs_bucket_name}/alb/connections/AWSLogs/${local.aws_region}/*"
+      "Resource": "arn:aws:s3:::${local.logs_bucket_name}/alb/connections/AWSLogs/${local.aws_account_id}/*"
     },
     {
       "Effect": "Allow",
@@ -297,5 +303,3 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
 }
     POLICY
 }
-
- */
