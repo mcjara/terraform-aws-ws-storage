@@ -14,6 +14,31 @@ resource "aws_s3_bucket_public_access_block" "logs_bucket" {
   restrict_public_buckets = true
 }
 
+resource "aws_s3_bucket_policy" "logs_bucket_ssl_policy" {
+  bucket = aws_s3_bucket.logs_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "RequireSSL",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}/*",
+          "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}"
+        ],
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
+}
+
 resource "aws_s3_bucket" "assets_bucket" {
   bucket        = local.assets_bucket_name
   force_destroy = true
@@ -26,6 +51,31 @@ resource "aws_s3_bucket_public_access_block" "assets_bucket" {
   block_public_policy = true
   ignore_public_acls  = true
   restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_policy" "assets_bucket_ssl_policy" {
+  bucket = aws_s3_bucket.assets_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "RequireSSL",
+        Effect    = "Deny",
+        Principal = "*",
+        Action    = "s3:*",
+        Resource = [
+          "arn:aws:s3:::${aws_s3_bucket.assets_bucket.id}/*",
+          "arn:aws:s3:::${aws_s3_bucket.assets_bucket.id}"
+        ],
+        Condition = {
+          Bool = {
+            "aws:SecureTransport" = "false"
+          }
+        }
+      }
+    ]
+  })
 }
 
 # IAM Policies
