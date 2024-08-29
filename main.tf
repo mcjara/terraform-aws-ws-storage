@@ -137,16 +137,16 @@ resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
   "Version": "2012-10-17",
   "Statement": [
       {
-        Sid       = "RequireSSL",
-        Effect    = "Deny",
-        Principal = "*",
-        Action    = "s3:*",
-        Resource = [
+        "Sid"       = "RequireSSL",
+        "Effect"    = "Deny",
+        "Principal" = "*",
+        "Action"    = "s3:*",
+        "Resource" = [
           "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}/*",
           "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}"
         ],
-        Condition = {
-          Bool = {
+        "Condition" = {
+          "Bool" = {
             "aws:SecureTransport" = "false"
           }
         }
@@ -283,16 +283,16 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
   "Version": "2012-10-17",
   "Statement": [
       {
-        Sid       = "RequireSSL",
-        Effect    = "Deny",
-        Principal = "*",
-        Action    = "s3:*",
-        Resource = [
+        "Sid"       = "RequireSSL",
+        "Effect"    = "Deny",
+        "Principal" = "*",
+        "Action"    = "s3:*",
+        "Resource" = [
           "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}/*",
           "arn:aws:s3:::${aws_s3_bucket.logs_bucket.id}"
         ],
-        Condition = {
-          Bool = {
+        "Condition" = {
+          "Bool" = {
             "aws:SecureTransport" = "false"
           }
         }
