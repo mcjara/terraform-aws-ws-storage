@@ -147,7 +147,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-legacy" {
         ],
         "Condition" : {
           "Bool" : {
-            "aws:SecureTransport" = "false"
+            "aws:SecureTransport" : "false"
           }
         }
       },
@@ -293,7 +293,7 @@ resource "aws_s3_bucket_policy" "logs_bucket-modern" {
         ],
         "Condition" : {
           "Bool" : {
-            "aws:SecureTransport" = "false"
+            "aws:SecureTransport" : "false"
           }
         }
       },
